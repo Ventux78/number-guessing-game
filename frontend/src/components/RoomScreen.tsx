@@ -12,16 +12,12 @@ interface RoomScreenProps {
 }
 
 export const RoomScreen = ({ roomCode, onCreateRoom, onJoinRoom, onRoomCodeChange, error }: RoomScreenProps) => {
-  const [roomCodeLocal, setRoomCodeLocal] = useState('')
-  const [errorLocal, setErrorLocal] = useState('')
-
   const handleCreateRoom = () => {
     onCreateRoom()
   }
 
   const handleJoinRoom = () => {
     if (!roomCode.trim()) {
-      setErrorLocal('Room code cannot be empty')
       return
     }
     onJoinRoom()
@@ -39,7 +35,6 @@ export const RoomScreen = ({ roomCode, onCreateRoom, onJoinRoom, onRoomCodeChang
             value={roomCode}
             onChange={(e) => {
               onRoomCodeChange(e.target.value)
-              setErrorLocal('')
             }}
           />
           <button onClick={handleJoinRoom}>Join Room</button>

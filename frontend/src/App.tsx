@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { io, Socket } from 'socket.io-client'
 import './App.css'
 
 type GameScreen = 'room' | 'setup' | 'game'
 
 function App() {
+  const [socket, setSocket] = useState<Socket | null>(null)
   const [currentScreen, setCurrentScreen] = useState<GameScreen>('room')
   const [roomCode, setRoomCode] = useState('')
   const [secretNumber, setSecretNumber] = useState('')
@@ -11,12 +13,51 @@ function App() {
   const [validRange, setValidRange] = useState({ min: 1, max: 100 })
   const [guessHistory, setGuessHistory] = useState<Array<{ player: string; guess: number; time: string }>>([])
   const [error, setError] = useState('')
-  const [currentTurn, setCurrentTurn] = useState(1)
+  const [isConnected, setIsConnected] = useState(false)
+
+  // Initialize Socket.IO connection
+  useEffect(() => {
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
+    const newSocket = io(backendUrl, {
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 5
+    })
+
+    newSocket.on('connect', () => {
+      setIsConnected(true)
+      setError('')
+    })
+
+    newSocket.on('disconnect', () => {
+      setIsConnected(false)
+    })
+
+    newSocket.on('error', (err) => {
+      setError(`Connection error: ${err}`)
+    })
+
+    setSocket(newSocket)
+
+    return () => {
+      newSocket.disconnect()
+    }
+  }, [])
 
   const handleCreateRoom = () => {
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase()
-    setRoomCode(code)
-    setError('')
+    if (!socket || !isConnected) {
+      setError('Not connected to server')
+      return
+    }
+    socket.emit('create_room', {}, (response: any) => {
+      if (response.success) {
+        setRoomCode(response.room_code)
+        setError('')
+      } else {
+        setError(response.error || 'Failed to create room')
+      }
+    })
   }
 
   const handleJoinRoom = () => {
@@ -24,8 +65,18 @@ function App() {
       setError('Room code cannot be empty')
       return
     }
-    setCurrentScreen('setup')
-    setError('')
+    if (!socket || !isConnected) {
+      setError('Not connected to server')
+      return
+    }
+    socket.emit('join_room', { room_code: roomCode }, (response: any) => {
+      if (response.success) {
+        setCurrentScreen('setup')
+        setError('')
+      } else {
+        setError(response.error || 'Failed to join room')
+      }
+    })
   }
 
   const handleSubmitNumber = () => {
@@ -38,8 +89,18 @@ function App() {
       setError('Number must be between 1 and 100')
       return
     }
-    setCurrentScreen('game')
-    setError('')
+    if (!socket || !isConnected) {
+      setError('Not connected to server')
+      return
+    }
+    socket.emit('submit_number', { secret_number: num }, (response: any) => {
+      if (response.success) {
+        setCurrentScreen('game')
+        setError('')
+      } else {
+        setError(response.error || 'Failed to submit number')
+      }
+    })
   }
 
   const handleSubmitGuess = () => {
@@ -56,14 +117,20 @@ function App() {
       setError(`Guess must be between ${validRange.min} and ${validRange.max}`)
       return
     }
-    
-    const now = new Date().toLocaleTimeString()
-    setGuessHistory([...guessHistory, { player: currentTurn === 1 ? 'You' : 'Opponent', guess: num, time: now }])
-    setGuess('')
-    setError('')
-    
-    // Sırayı değiştir
-    setCurrentTurn(currentTurn === 1 ? 2 : 1)
+    if (!socket || !isConnected) {
+      setError('Not connected to server')
+      return
+    }
+    socket.emit('submit_guess', { guess: num }, (response: any) => {
+      if (response.success) {
+        const now = new Date().toLocaleTimeString()
+        setGuessHistory([...guessHistory, { player: 'You', guess: num, time: now }])
+        setGuess('')
+        setError('')
+      } else {
+        setError(response.error || 'Failed to submit guess')
+      }
+    })
   }
 
   const handleReset = () => {
@@ -74,18 +141,23 @@ function App() {
     setGuessHistory([])
     setError('')
     setValidRange({ min: 1, max: 100 })
-    setCurrentTurn(1)
   }
 
   return (
     <div className="app-container">
+      {!isConnected && (
+        <div className="connection-warning">
+          ⚠️ Connecting to server...
+        </div>
+      )}
+      
       {currentScreen === 'room' && (
         <div className="screen room-screen">
           <h1>🎮 Number Guessing Game</h1>
           <p className="subtitle">Challenge a friend to guess your secret number!</p>
           
           <div className="room-actions">
-            <button className="btn btn-primary" onClick={handleCreateRoom}>
+            <button className="btn btn-primary" onClick={handleCreateRoom} disabled={!isConnected}>
               ➕ Create Room
             </button>
             {roomCode && (
@@ -109,7 +181,7 @@ function App() {
                 }}
                 className="input"
               />
-              <button className="btn btn-secondary" onClick={handleJoinRoom}>
+              <button className="btn btn-secondary" onClick={handleJoinRoom} disabled={!isConnected}>
                 🚪 Join Room
               </button>
             </div>
@@ -136,7 +208,7 @@ function App() {
               }}
               className="input"
             />
-            <button className="btn btn-primary" onClick={handleSubmitNumber}>
+            <button className="btn btn-primary" onClick={handleSubmitNumber} disabled={!isConnected}>
               ✓ Confirm Number
             </button>
           </div>
@@ -167,7 +239,7 @@ function App() {
               }}
               className="input"
             />
-            <button className="btn btn-primary" onClick={handleSubmitGuess}>
+            <button className="btn btn-primary" onClick={handleSubmitGuess} disabled={!isConnected}>
               📤 Submit Guess
             </button>
           </div>

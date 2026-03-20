@@ -1,7 +1,6 @@
 /**
  * GameScreen component for the main guessing game
  */
-import { useState } from 'react'
 import { Guess } from '../types'
 
 interface GameScreenProps {
