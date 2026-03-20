@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sayı Tahmin Oyunu - Simülatör (2 Oyuncu)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1a1f3a 100%);
+            padding: 1rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: #f1f5f9;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #cbd5e1;
+            font-size: 1.1rem;
+        }
+
+        .game-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .player-panel {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .player-header {
+            text-align: center;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #334155;
+        }
+
+        .player-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #f1f5f9;
+            margin-bottom: 0.5rem;
+        }
+
+        .player-status {
+            font-size: 0.9rem;
+            color: #cbd5e1;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .status-waiting {
+            background: rgba(99, 102, 241, 0.2);
+            color: #a5b4fc;
+        }
+
+        .status-ready {
+            background: rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
+        }
+
+        .status-playing {
+            background: rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+        }
+
+        .status-won {
+            background: rgba(34, 197, 94, 0.2);
+            color: #86efac;
+        }
+
+        .game-state {
+            background: rgba(99, 102, 241, 0.1);
+            border: 2px solid #6366f1;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .state-label {
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .state-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #6366f1;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0.2em;
+        }
+
+        .range-display {
+            background: rgba(99, 102, 241, 0.1);
+            border: 2px solid #6366f1;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .range-label {
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .range-value {
+            font-size: 1.75rem;
+            font-weight: bold;
+            color: #6366f1;
+        }
+
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid #334155;
+            border-radius: 8px;
+            background: rgba(15, 23, 42, 0.5);
+            color: #f1f5f9;
+            font-size: 1rem;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .input-group button {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 120px;
+        }
+
+        .input-group button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .input-group button:active {
+            transform: translateY(0);
+        }
+
+        .input-group button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .guess-history {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .guess-history h4 {
+            color: #f1f5f9;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        .guess-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .guess-number {
+            font-weight: bold;
+            color: #6366f1;
+            font-size: 1.1rem;
+        }
+
+        .guess-feedback {
+            color: #cbd5e1;
+            font-size: 0.85rem;
+        }
+
+        .guess-time {
+            color: #64748b;
+            font-size: 0.8rem;
+        }
+
+        .control-panel {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-panel h3 {
+            color: #f1f5f9;
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+
+        .control-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .control-btn {
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+        }
+
+        .btn-reset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-auto {
+            background: rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
+            border: 2px solid #10b981;
+        }
+
+        .btn-auto:hover {
+            background: rgba(16, 185, 129, 0.3);
+        }
+
+        .game-log {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 1.5rem;
+        }
+
+        .game-log h4 {
+            color: #f1f5f9;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        .log-entry {
+            padding: 0.75rem;
+            background: rgba(99, 102, 241, 0.1);
+            border-left: 3px solid #6366f1;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: #cbd5e1;
+        }
+
+        .log-entry.info {
+            border-left-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .log-entry.success {
+            border-left-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+            color: #6ee7b7;
+        }
+
+        .log-entry.error {
+            border-left-color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+        }
+
+        .log-time {
+            color: #64748b;
+            font-size: 0.8rem;
+            margin-right: 0.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .game-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .empty-state {
+            color: #64748b;
+            text-align: center;
+            padding: 2rem;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 Sayı Tahmin Oyunu - Simülatör</h1>
+            <p>İki oyunculu oyun akışını test et</p>
+        </div>
+
+        <div class="game-container">
+            <!-- Oyuncu 1 -->
+            <div class="player-panel">
+                <div class="player-header">
+                    <div class="player-name">👤 Oyuncu 1</div>
+                    <div class="player-status">
+                        Durum: <span class="status-badge status-waiting" id="p1Status">Bekleniyor</span>
+                    </div>
+                </div>
+
+                <div class="game-state">
+                    <div class="state-label">Gizli Sayı</div>
+                    <div class="state-value" id="p1Secret">?</div>
+                </div>
+
+                <div class="range-display">
+                    <div class="range-label">Geçerli Aralık</div>
+                    <div class="range-value"><span id="p1MinRange">1</span> — <span id="p1MaxRange">100</span></div>
+                </div>
+
+                <div class="input-section">
+                    <div class="input-group">
+                        <input type="number" id="p1SecretInput" min="1" max="100" placeholder="Gizli sayı gir (1-100)" />
+                        <button onclick="setSecret(1)">Ayarla</button>
+                    </div>
+                    <div class="input-group">
+                        <input type="number" id="p1GuessInput" placeholder="Tahmin et" />
+                        <button onclick="submitGuess(1)" id="p1GuessBtn">Gönder</button>
+                    </div>
+                </div>
+
+                <div class="guess-history">
+                    <h4>📋 Tahminler</h4>
+                    <div id="p1History" class="empty-state">Henüz tahmin yok</div>
+                </div>
+            </div>
+
+            <!-- Oyuncu 2 -->
+            <div class="player-panel">
+                <div class="player-header">
+                    <div class="player-name">👤 Oyuncu 2</div>
+                    <div class="player-status">
+                        Durum: <span class="status-badge status-waiting" id="p2Status">Bekleniyor</span>
+                    </div>
+                </div>
+
+                <div class="game-state">
+                    <div class="state-label">Gizli Sayı</div>
+                    <div class="state-value" id="p2Secret">?</div>
+                </div>
+
+                <div class="range-display">
+                    <div class="range-label">Geçerli Aralık</div>
+                    <div class="range-value"><span id="p2MinRange">1</span> — <span id="p2MaxRange">100</span></div>
+                </div>
+
+                <div class="input-section">
+                    <div class="input-group">
+                        <input type="number" id="p2SecretInput" min="1" max="100" placeholder="Gizli sayı gir (1-100)" />
+                        <button onclick="setSecret(2)">Ayarla</button>
+                    </div>
+                    <div class="input-group">
+                        <input type="number" id="p2GuessInput" placeholder="Tahmin et" />
+                        <button onclick="submitGuess(2)" id="p2GuessBtn">Gönder</button>
+                    </div>
+                </div>
+
+                <div class="guess-history">
+                    <h4>📋 Tahminler</h4>
+                    <div id="p2History" class="empty-state">Henüz tahmin yok</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kontrol Paneli -->
+        <div class="control-panel">
+            <h3>🎮 Kontrol Paneli</h3>
+            <div class="control-buttons">
+                <button class="control-btn btn-reset" onclick="resetGame()">🔄 Oyunu Sıfırla</button>
+                <button class="control-btn btn-auto" onclick="autoPlay()">⚡ Otomatik Oyna (Bilgisayar)</button>
+            </div>
+
+            <div class="game-log">
+                <h4>📝 Oyun Günlüğü</h4>
+                <div id="gameLog" class="empty-state">Oyun başlamadı</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const gameState = {
+            p1: {
+                secret: null,
+                range: { min: 1, max: 100 },
+                guesses: [],
+                status: 'waiting',
+                won: false
+            },
+            p2: {
+                secret: null,
+                range: { min: 1, max: 100 },
+                guesses: [],
+                status: 'waiting',
+                won: false
+            },
+            gamePhase: 'setup', // setup, playing, finished
+            currentTurn: 1 // Kimin sırası olduğu
+        };
+
+        const log = [];
+
+        function addLog(message, type = 'info') {
+            const time = new Date().toLocaleTimeString('tr-TR');
+            log.push({ message, type, time });
+            updateLogDisplay();
+        }
+
+        function updateLogDisplay() {
+            const logDiv = document.getElementById('gameLog');
+            if (log.length === 0) {
+                logDiv.innerHTML = '<div class="empty-state">Oyun başlamadı</div>';
+                return;
+            }
+            logDiv.innerHTML = log.map(entry => `
+                <div class="log-entry ${entry.type}">
+                    <span class="log-time">${entry.time}</span>
+                    ${entry.message}
+                </div>
+            `).join('');
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function setSecret(player) {
+            const input = document.getElementById(`p${player}SecretInput`);
+            const num = parseInt(input.value, 10);
+
+            if (!input.value.trim()) {
+                addLog(`Oyuncu ${player}: Sayı boş olamaz`, 'error');
+                return;
+            }
+
+            if (isNaN(num) || num < 1 || num > 100) {
+                addLog(`Oyuncu ${player}: Sayı 1-100 arasında olmalı`, 'error');
+                return;
+            }
+
+            gameState[`p${player}`].secret = num;
+            gameState[`p${player}`].status = 'ready';
+            updateUI();
+            addLog(`Oyuncu ${player}: Gizli sayı ayarlandı ✓`, 'success');
+
+            // Her iki oyuncu hazırsa oyunu başlat
+            if (gameState.p1.secret && gameState.p2.secret) {
+                gameState.gamePhase = 'playing';
+                addLog('🎮 Oyun başladı! Tahmin etmeye başlayabilirsiniz', 'success');
+                updateUI();
+            }
+        }
+
+        function submitGuess(player) {
+            const input = document.getElementById(`p${player}GuessInput`);
+            const num = parseInt(input.value, 10);
+            const opponent = player === 1 ? 2 : 1;
+            const playerState = gameState[`p${player}`];
+            const opponentState = gameState[`p${opponent}`];
+
+            if (gameState.gamePhase !== 'playing') {
+                addLog(`Oyuncu ${player}: Oyun henüz başlamadı`, 'error');
+                return;
+            }
+
+            // Sıra kontrolü
+            if (gameState.currentTurn !== player) {
+                addLog(`Oyuncu ${player}: Şu anda Oyuncu ${gameState.currentTurn}'in sırası`, 'error');
+                return;
+            }
+
+            if (!input.value.trim()) {
+                addLog(`Oyuncu ${player}: Tahmin boş olamaz`, 'error');
+                return;
+            }
+
+            if (isNaN(num)) {
+                addLog(`Oyuncu ${player}: Geçerli bir sayı gir`, 'error');
+                return;
+            }
+
+            if (num < playerState.range.min || num > playerState.range.max) {
+                addLog(`Oyuncu ${player}: Tahmin ${playerState.range.min}-${playerState.range.max} arasında olmalı`, 'error');
+                return;
+            }
+
+            // Tahmin zaten yapılmış mı?
+            if (playerState.guesses.some(g => g.guess === num)) {
+                addLog(`Oyuncu ${player}: Bu sayıyı zaten tahmin ettin`, 'error');
+                return;
+            }
+
+            const secret = opponentState.secret;
+            let feedback = '';
+
+            if (num === secret) {
+                feedback = '✓ Doğru!';
+                playerState.won = true;
+                gameState.gamePhase = 'finished';
+                addLog(`🎉 Oyuncu ${player} KAZANDI! Gizli sayı: ${secret}`, 'success');
+            } else if (num < secret) {
+                feedback = '↑ Daha yüksek';
+                playerState.range.min = num + 1;
+            } else {
+                feedback = '↓ Daha düşük';
+                playerState.range.max = num - 1;
+            }
+
+            playerState.guesses.push({ guess: num, feedback, time: new Date().toLocaleTimeString('tr-TR') });
+            input.value = '';
+            addLog(`Oyuncu ${player}: ${num} tahmin etti → ${feedback}`, 'info');
+            
+            // Sırayı değiştir
+            gameState.currentTurn = opponent;
+            
+            updateUI();
+        }
+
+        function updateUI() {
+            // Oyuncu 1
+            updatePlayerUI(1);
+            updatePlayerUI(2);
+        }
+
+        function updatePlayerUI(player) {
+            const state = gameState[`p${player}`];
+            const opponent = player === 1 ? 2 : 1;
+            const opponentState = gameState[`p${opponent}`];
+
+            // Durum badge'i
+            const statusEl = document.getElementById(`p${player}Status`);
+            let statusClass = 'status-waiting';
+            let statusText = 'Bekleniyor';
+
+            if (state.won) {
+                statusClass = 'status-won';
+                statusText = '🏆 Kazandı!';
+            } else if (gameState.gamePhase === 'playing') {
+                if (gameState.currentTurn === player) {
+                    statusClass = 'status-playing';
+                    statusText = '🎮 Senin Sırası!';
+                } else {
+                    statusClass = 'status-waiting';
+                    statusText = '⏳ Bekleniyor';
+                }
+            } else if (state.status === 'ready') {
+                statusClass = 'status-ready';
+                statusText = '✓ Hazır';
+            }
+
+            statusEl.className = `status-badge ${statusClass}`;
+            statusEl.textContent = statusText;
+
+            // Gizli sayı
+            const secretEl = document.getElementById(`p${player}Secret`);
+            secretEl.textContent = state.secret ? state.secret : '?';
+
+            // Aralık
+            document.getElementById(`p${player}MinRange`).textContent = state.range.min;
+            document.getElementById(`p${player}MaxRange`).textContent = state.range.max;
+
+            // Tahminler
+            const historyEl = document.getElementById(`p${player}History`);
+            if (state.guesses.length === 0) {
+                historyEl.innerHTML = '<div class="empty-state">Henüz tahmin yok</div>';
+            } else {
+                historyEl.innerHTML = state.guesses.map(g => `
+                    <div class="guess-item">
+                        <span class="guess-number">${g.guess}</span>
+                        <span class="guess-feedback">${g.feedback}</span>
+                        <span class="guess-time">${g.time}</span>
+                    </div>
+                `).join('');
+            }
+
+            // Buton durumu - sadece sırası olan oyuncu tahmin edebilir
+            const guessBtn = document.getElementById(`p${player}GuessBtn`);
+            guessBtn.disabled = gameState.gamePhase !== 'playing' || state.won || gameState.currentTurn !== player;
+
+            const secretInput = document.getElementById(`p${player}SecretInput`);
+            secretInput.disabled = state.secret !== null;
+        }
+
+        function resetGame() {
+            gameState.p1 = {
+                secret: null,
+                range: { min: 1, max: 100 },
+                guesses: [],
+                status: 'waiting',
+                won: false
+            };
+            gameState.p2 = {
+                secret: null,
+                range: { min: 1, max: 100 },
+                guesses: [],
+                status: 'waiting',
+                won: false
+            };
+            gameState.gamePhase = 'setup';
+            gameState.currentTurn = 1;
+            log.length = 0;
+
+            document.getElementById('p1SecretInput').value = '';
+            document.getElementById('p1GuessInput').value = '';
+            document.getElementById('p2SecretInput').value = '';
+            document.getElementById('p2GuessInput').value = '';
+
+            updateUI();
+            addLog('🔄 Oyun sıfırlandı', 'info');
+        }
+
+        function autoPlay() {
+            if (gameState.p1.secret === null) {
+                const p1Secret = Math.floor(Math.random() * 100) + 1;
+                document.getElementById('p1SecretInput').value = p1Secret;
+                setSecret(1);
+            }
+
+            if (gameState.p2.secret === null) {
+                const p2Secret = Math.floor(Math.random() * 100) + 1;
+                document.getElementById('p2SecretInput').value = p2Secret;
+                setSecret(2);
+            }
+
+            if (gameState.gamePhase === 'playing') {
+                // Bilgisayar otomatik tahmin yapsın - sıra sıra
+                const autoGuess = () => {
+                    if (gameState.gamePhase !== 'playing') return;
+
+                    const currentPlayer = gameState.currentTurn;
+                    const playerState = gameState[`p${currentPlayer}`];
+
+                    if (!playerState.won) {
+                        const guess = Math.floor((playerState.range.min + playerState.range.max) / 2);
+                        document.getElementById(`p${currentPlayer}GuessInput`).value = guess;
+                        submitGuess(currentPlayer);
+                    }
+
+                    if (gameState.gamePhase === 'playing') {
+                        setTimeout(autoGuess, 1500);
+                    }
+                };
+
+                autoGuess();
+            }
+        }
+
+        // İlk yükleme
+        updateUI();
+        addLog('👋 Hoş geldin! Oyunu test etmeye başla', 'info');
+    </script>
+</body>
+</html>

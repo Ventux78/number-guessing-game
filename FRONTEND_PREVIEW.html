@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Guessing Game - UI Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --border-color: #334155;
+        }
+
+        body {
+            width: 100%;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--bg-color) 0%, #1a1f3a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .screen {
+            background: var(--surface-color);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease-out;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 1rem;
+        }
+
+        .room-screen {
+            text-align: center;
+        }
+
+        .room-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .room-code-display {
+            background: rgba(99, 102, 241, 0.1);
+            border: 2px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .room-code-display p {
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .code {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            letter-spacing: 0.2em;
+            font-family: 'Courier New', monospace;
+            margin: 1rem 0;
+        }
+
+        .hint {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        .divider {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin: 1rem 0;
+        }
+
+        .join-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .setup-screen {
+            text-align: center;
+        }
+
+        .setup-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .waiting-message {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 8px;
+        }
+
+        .game-screen {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .game-info {
+            background: rgba(99, 102, 241, 0.1);
+            border: 2px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .range-display {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .range-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .range-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            letter-spacing: 0.1em;
+        }
+
+        .guess-input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .guess-history-section {
+            flex: 1;
+            min-height: 200px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+        }
+
+        .player-name {
+            color: var(--text-secondary);
+            font-weight: 500;
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .guess-value {
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 1.1rem;
+            flex: 0 0 auto;
+        }
+
+        .timestamp {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            flex: 0 0 auto;
+        }
+
+        .empty-state {
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 2rem 0;
+            font-style: italic;
+        }
+
+        .input {
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background: rgba(15, 23, 42, 0.5);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: rgba(15, 23, 42, 0.8);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #7c3aed 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(99, 102, 241, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary:active {
+            transform: translateY(0);
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid var(--error-color);
+            color: #fca5a5;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.95rem;
+            animation: shake 0.3s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            25% {
+                transform: translateX(-5px);
+            }
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 0.5rem;
+            }
+
+            .app-container {
+                max-width: 100%;
+            }
+
+            .screen {
+                padding: 1.25rem;
+                border-radius: 12px;
+            }
+
+            h1 {
+                font-size: 1.75rem;
+                margin-bottom: 0.25rem;
+            }
+
+            h2 {
+                font-size: 1.4rem;
+                margin-bottom: 0.25rem;
+            }
+
+            h3 {
+                font-size: 1.1rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .subtitle {
+                font-size: 0.9rem;
+                margin-bottom: 1.25rem;
+            }
+
+            .room-actions {
+                gap: 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .room-code-display {
+                padding: 1rem;
+                margin: 0.75rem 0;
+            }
+
+            .code {
+                font-size: 1.5rem;
+                margin: 0.75rem 0;
+            }
+
+            .hint {
+                font-size: 0.8rem;
+            }
+
+            .divider {
+                margin: 0.75rem 0;
+                font-size: 0.85rem;
+            }
+
+            .join-section {
+                gap: 0.75rem;
+            }
+
+            .setup-form {
+                gap: 0.75rem;
+                margin: 1.5rem 0;
+            }
+
+            .waiting-message {
+                font-size: 0.9rem;
+                margin-top: 1rem;
+                padding: 0.75rem;
+            }
+
+            .game-info {
+                padding: 1rem;
+            }
+
+            .range-value {
+                font-size: 1.5rem;
+            }
+
+            .guess-input-section {
+                gap: 0.75rem;
+            }
+
+            .guess-history-section {
+                min-height: 150px;
+                padding: 1rem;
+                max-height: 300px;
+            }
+
+            .history-list {
+                gap: 0.5rem;
+            }
+
+            .history-item {
+                gap: 0.5rem;
+                padding: 0.5rem;
+                font-size: 0.85rem;
+            }
+
+            .player-name {
+                font-size: 0.85rem;
+            }
+
+            .guess-value {
+                font-size: 1rem;
+            }
+
+            .timestamp {
+                font-size: 0.75rem;
+            }
+
+            .empty-state {
+                padding: 1rem 0;
+                font-size: 0.9rem;
+            }
+
+            .input {
+                padding: 0.65rem 0.85rem;
+                font-size: 16px;
+                border-radius: 6px;
+            }
+
+            .btn {
+                padding: 0.65rem 1rem;
+                font-size: 0.95rem;
+                min-height: 44px;
+                border-radius: 6px;
+            }
+
+            .error-message {
+                padding: 0.75rem;
+                font-size: 0.9rem;
+                border-radius: 6px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 0.25rem;
+            }
+
+            .screen {
+                padding: 1rem;
+                border-radius: 10px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 0.2rem;
+            }
+
+            h2 {
+                font-size: 1.2rem;
+                margin-bottom: 0.2rem;
+            }
+
+            h3 {
+                font-size: 1rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .subtitle {
+                font-size: 0.85rem;
+                margin-bottom: 1rem;
+                line-height: 1.3;
+            }
+
+            .room-actions {
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+            }
+
+            .room-code-display {
+                padding: 0.75rem;
+                margin: 0.5rem 0;
+                border-radius: 8px;
+            }
+
+            .room-code-display p {
+                font-size: 0.8rem;
+                margin-bottom: 0.25rem;
+            }
+
+            .code {
+                font-size: 1.25rem;
+                margin: 0.5rem 0;
+                letter-spacing: 0.15em;
+            }
+
+            .hint {
+                font-size: 0.75rem;
+                margin-top: 0.25rem;
+            }
+
+            .divider {
+                margin: 0.5rem 0;
+                font-size: 0.8rem;
+            }
+
+            .join-section {
+                gap: 0.5rem;
+            }
+
+            .setup-form {
+                gap: 0.5rem;
+                margin: 1rem 0;
+            }
+
+            .waiting-message {
+                font-size: 0.85rem;
+                margin-top: 0.75rem;
+                padding: 0.5rem;
+                border-radius: 6px;
+            }
+
+            .game-info {
+                padding: 0.75rem;
+                border-radius: 8px;
+            }
+
+            .range-label {
+                font-size: 0.8rem;
+            }
+
+            .range-value {
+                font-size: 1.25rem;
+                letter-spacing: 0.05em;
+            }
+
+            .guess-input-section {
+                gap: 0.5rem;
+            }
+
+            .guess-history-section {
+                min-height: 120px;
+                padding: 0.75rem;
+                max-height: 250px;
+                border-radius: 8px;
+            }
+
+            .history-list {
+                gap: 0.4rem;
+            }
+
+            .history-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.2rem;
+                padding: 0.4rem;
+                border-radius: 6px;
+                font-size: 0.8rem;
+            }
+
+            .player-name {
+                font-size: 0.8rem;
+            }
+
+            .guess-value {
+                font-size: 0.95rem;
+            }
+
+            .timestamp {
+                font-size: 0.7rem;
+            }
+
+            .empty-state {
+                padding: 0.75rem 0;
+                font-size: 0.85rem;
+            }
+
+            .input {
+                padding: 0.6rem 0.75rem;
+                font-size: 16px;
+                border-radius: 6px;
+                border-width: 1.5px;
+            }
+
+            .input:focus {
+                box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+            }
+
+            .btn {
+                padding: 0.6rem 0.9rem;
+                font-size: 0.9rem;
+                min-height: 44px;
+                border-radius: 6px;
+                font-weight: 600;
+            }
+
+            .btn-primary {
+                font-size: 0.9rem;
+            }
+
+            .btn-secondary {
+                font-size: 0.9rem;
+            }
+
+            .error-message {
+                padding: 0.6rem;
+                font-size: 0.85rem;
+                border-radius: 6px;
+                border-width: 1.5px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .screen {
+                padding: 0.85rem;
+            }
+
+            h1 {
+                font-size: 1.35rem;
+            }
+
+            h2 {
+                font-size: 1.1rem;
+            }
+
+            .code {
+                font-size: 1.1rem;
+                letter-spacing: 0.1em;
+            }
+
+            .range-value {
+                font-size: 1.1rem;
+            }
+
+            .input {
+                padding: 0.55rem 0.7rem;
+                font-size: 15px;
+            }
+
+            .btn {
+                padding: 0.55rem 0.8rem;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Room Screen -->
+        <div id="roomScreen" class="screen room-screen">
+            <h1>🎮 Number Guessing Game</h1>
+            <p class="subtitle">Challenge a friend to guess your secret number!</p>
+            
+            <div class="room-actions">
+                <button class="btn btn-primary" onclick="createRoom()">
+                    ➕ Create Room
+                </button>
+                <div id="roomCodeDisplay" class="hidden">
+                    <div class="room-code-display">
+                        <p>Your Room Code:</p>
+                        <div class="code" id="roomCodeValue">ABC123</div>
+                        <p class="hint">Share this code with your friend</p>
+                    </div>
+                </div>
+                
+                <div class="divider">OR</div>
+                
+                <div class="join-section">
+                    <input
+                        type="text"
+                        id="joinRoomCode"
+                        placeholder="Enter room code"
+                        class="input"
+                    />
+                    <button class="btn btn-secondary" onclick="joinRoom()">
+                        🚪 Join Room
+                    </button>
+                </div>
+            </div>
+            <div id="roomError" class="hidden error-message"></div>
+        </div>
+
+        <!-- Setup Screen -->
+        <div id="setupScreen" class="screen setup-screen hidden">
+            <h2>Choose Your Secret Number</h2>
+            <p class="subtitle">Pick a number between 1 and 100 for your opponent to guess</p>
+            
+            <div class="setup-form">
+                <input
+                    type="number"
+                    id="secretNumber"
+                    min="1"
+                    max="100"
+                    placeholder="Enter number (1-100)"
+                    class="input"
+                />
+                <button class="btn btn-primary" onclick="submitNumber()">
+                    ✓ Confirm Number
+                </button>
+            </div>
+            <p class="waiting-message">⏳ Waiting for opponent to choose their number...</p>
+            <div id="setupError" class="hidden error-message"></div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="screen game-screen hidden">
+            <h2>🎯 Guessing Game</h2>
+            
+            <div class="game-info">
+                <div class="range-display">
+                    <p class="range-label">Valid Range:</p>
+                    <p class="range-value"><span id="minRange">1</span> — <span id="maxRange">100</span></p>
+                </div>
+            </div>
+
+            <div class="guess-input-section">
+                <input
+                    type="number"
+                    id="guessInput"
+                    placeholder="Enter your guess"
+                    class="input"
+                />
+                <button class="btn btn-primary" onclick="submitGuess()">
+                    📤 Submit Guess
+                </button>
+            </div>
+
+            <div id="gameError" class="hidden error-message"></div>
+
+            <div class="guess-history-section">
+                <h3>📋 Guess History</h3>
+                <div class="history-list" id="historyList">
+                    <p class="empty-state">No guesses yet. Make your first guess!</p>
+                </div>
+            </div>
+
+            <button class="btn btn-secondary" onclick="backToRoom()">
+                🏠 Back to Room
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentScreen = 'room';
+        let roomCode = '';
+        let guessHistory = [];
+        let validRange = { min: 1, max: 100 };
+        let currentTurn = 1; // Kimin sırası olduğu
+
+        function showScreen(screen) {
+            document.getElementById('roomScreen').classList.add('hidden');
+            document.getElementById('setupScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.add('hidden');
+            
+            document.getElementById(screen + 'Screen').classList.remove('hidden');
+            currentScreen = screen;
+        }
+
+        function createRoom() {
+            roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+            document.getElementById('roomCodeValue').textContent = roomCode;
+            document.getElementById('roomCodeDisplay').classList.remove('hidden');
+            document.getElementById('roomError').classList.add('hidden');
+        }
+
+        function joinRoom() {
+            const code = document.getElementById('joinRoomCode').value.trim();
+            if (!code) {
+                showError('roomError', 'Room code cannot be empty');
+                return;
+            }
+            showScreen('setup');
+        }
+
+        function submitNumber() {
+            const num = parseInt(document.getElementById('secretNumber').value, 10);
+            if (!document.getElementById('secretNumber').value.trim()) {
+                showError('setupError', 'Number cannot be empty');
+                return;
+            }
+            if (isNaN(num) || num < 1 || num > 100) {
+                showError('setupError', 'Number must be between 1 and 100');
+                return;
+            }
+            showScreen('game');
+        }
+
+        function submitGuess() {
+            const num = parseInt(document.getElementById('guessInput').value, 10);
+            if (!document.getElementById('guessInput').value.trim()) {
+                showError('gameError', 'Guess cannot be empty');
+                return;
+            }
+            if (isNaN(num)) {
+                showError('gameError', 'Guess must be a valid integer');
+                return;
+            }
+            if (num < validRange.min || num > validRange.max) {
+                showError('gameError', `Guess must be between ${validRange.min} and ${validRange.max}`);
+                return;
+            }
+            
+            const now = new Date().toLocaleTimeString();
+            guessHistory.push({ player: currentTurn === 1 ? 'You' : 'Opponent', guess: num, time: now });
+            document.getElementById('guessInput').value = '';
+            document.getElementById('gameError').classList.add('hidden');
+            
+            // Sırayı değiştir
+            currentTurn = currentTurn === 1 ? 2 : 1;
+            
+            updateHistoryDisplay();
+        }
+
+        function updateHistoryDisplay() {
+            const historyList = document.getElementById('historyList');
+            if (guessHistory.length === 0) {
+                historyList.innerHTML = '<p class="empty-state">No guesses yet. Make your first guess!</p>';
+                return;
+            }
+            historyList.innerHTML = guessHistory.map((g, idx) => `
+                <div class="history-item">
+                    <span class="player-name">${g.player}</span>
+                    <span class="guess-value">${g.guess}</span>
+                    <span class="timestamp">${g.time}</span>
+                </div>
+            `).join('');
+        }
+
+        function backToRoom() {
+            roomCode = '';
+            guessHistory = [];
+            validRange = { min: 1, max: 100 };
+            currentTurn = 1;
+            document.getElementById('joinRoomCode').value = '';
+            document.getElementById('secretNumber').value = '';
+            document.getElementById('guessInput').value = '';
+            document.getElementById('roomCodeDisplay').classList.add('hidden');
+            showScreen('room');
+        }
+
+        function showError(elementId, message) {
+            const errorEl = document.getElementById(elementId);
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
