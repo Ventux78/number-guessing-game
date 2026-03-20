@@ -1,7 +1,6 @@
 /**
  * RoomScreen component for creating or joining a game room
  */
-import { useState } from 'react'
 
 interface RoomScreenProps {
   roomCode: string
