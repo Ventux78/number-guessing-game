@@ -16,7 +16,15 @@ def create_app(config_class=Config):
     
     # Initialize Socket.IO with CORS configuration
     allowed_origins = os.getenv('ALLOWED_ORIGINS', '*').split(',')
-    socketio = SocketIO(app, cors_allowed_origins=allowed_origins)
+    socketio = SocketIO(
+        app, 
+        cors_allowed_origins=allowed_origins,
+        async_mode='threading',
+        ping_timeout=60,
+        ping_interval=25,
+        engineio_logger=False,
+        socketio_logger=False
+    )
     
     # Register event handlers
     from handlers import register_handlers

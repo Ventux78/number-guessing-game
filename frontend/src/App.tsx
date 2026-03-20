@@ -18,11 +18,15 @@ function App() {
   // Initialize Socket.IO connection
   useEffect(() => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
+    console.log('Connecting to backend:', backendUrl)
     const newSocket = io(backendUrl, {
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
-      reconnectionAttempts: 5
+      reconnectionAttempts: 5,
+      transports: ['websocket', 'polling'],
+      secure: true,
+      rejectUnauthorized: false
     })
 
     newSocket.on('connect', () => {
